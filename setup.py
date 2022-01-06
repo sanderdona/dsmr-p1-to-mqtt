@@ -8,9 +8,9 @@ setup(
     author='Sander Dona',
     packages=find_packages(),
     install_requires=[
-        'paho-mqtt-=1.6.1',
-        'pyserial-=3.5',
-        'pytz-=2021.3'
+        'paho-mqtt==1.6.1',
+        'pyserial==3.5',
+        'pytz==2021.3'
     ],
     python_requires='>=3'
 )
