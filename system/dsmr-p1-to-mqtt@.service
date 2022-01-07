@@ -1,0 +1,13 @@
+[Unit]
+Description=Python DSMR P1 to MQTT service
+
+[Service]
+Restart=on-failure
+Environment="ARGS=%I"
+ExecStart=/bin/bash -c 'cd /opt/dsmr-p1-to-mqtt/ \
+    && virtualenv venv \
+    && source venv/bin/activate \
+    && /opt/dsmr-p1-to-mqtt/bin/p1-to-mqtt $ARGS'
+
+[Install]
+WantedBy=multi-user.target
