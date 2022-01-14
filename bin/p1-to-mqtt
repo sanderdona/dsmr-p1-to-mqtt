@@ -2,7 +2,6 @@
 
 import os
 import sys
-import argparse
 import asyncio
 import logging.config
 import uuid
@@ -10,6 +9,7 @@ import uuid
 root_path = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 sys.path.append(root_path)
 
+from strictyaml import load, Map, Int, Str, Optional, exceptions
 from reader import TelegramToMqtt, SerialPort
 from reader.domain import MqttConfig
 
@@ -32,7 +32,7 @@ LOGGING_CONFIG = {
             'level': 'INFO',
             'formatter': 'standard',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': 'log/p1-to-mqtt.log',
+            'filename': '../log/p1-to-mqtt.log',
             'maxBytes': 2048,
             'backupCount': 3,
         },
@@ -55,31 +55,45 @@ async def run_with_interval(interval, function):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Start the DSMR-P1 to MQTT reader")
-    parser.add_argument("--port", type=str, default="/dev/ttyUSB1", help="serial device to read")
-    parser.add_argument("--interval", type=int, default=5, help="Interval in seconds to read and publish")
-    parser.add_argument("--mqtt_host", type=str, help="MQTT broker address", required=True)
-    parser.add_argument("--mqtt_port", type=int, default=1883, help="MQTT broker port")
-    parser.add_argument("--mqtt_user", type=str, help="MQTT username", required=True)
-    parser.add_argument("--mqtt_pass", type=str, help="MQTT password", required=True)
-    parser.add_argument("--mqtt_base_topic", type=str, default="dsmr/reading/", help="MQTT base topic")
-    parser.add_argument("--mqtt_client_id", type=str, default="dsmr-reader", help="MQTT client id")
-    commandline_arguments = parser.parse_args()
 
     logging.config.dictConfig(LOGGING_CONFIG)
     logging.info("Starting DSMR P1 to MQTT")
 
-    mqtt_host = commandline_arguments.mqtt_host
-    mqtt_port = commandline_arguments.mqtt_port
-    mqtt_user = commandline_arguments.mqtt_user
-    mqtt_pass = commandline_arguments.mqtt_pass
-    mqtt_base_topic = commandline_arguments.mqtt_base_topic
-    mqtt_client_id = commandline_arguments.mqtt_client_id + "-" + str(uuid.uuid4())
-    mqtt_config = MqttConfig(mqtt_host, mqtt_port, mqtt_user, mqtt_pass, mqtt_base_topic, mqtt_client_id)
+    schema = Map({
+        Optional("port", "/dev/ttyUSB0"): Str(),
+        Optional("interval", 5): Int(),
+        "mqtt": Map({
+            "host-address": Str(),
+            "host-port": Int(),
+            "username": Str(),
+            "password": Str(),
+            Optional("root-topic", "dsmr/reading/"): Str(),
+            Optional("client-id", "dsmr-reader"): Str()
+        })
+    })
+    config_file = "config.yaml"
 
-    serial_port = SerialPort(commandline_arguments.port)
+    try:
+        properties = load(open("../" + config_file).read(), schema)
+    except FileNotFoundError as e:
+        logging.error(f"Config file '{config_file}' not found")
+        sys.exit(1)
+    except exceptions.YAMLValidationError as e:
+        logging.error(f"Failed to read {config_file}: {e.problem}")
+        sys.exit(1)
+
+    mqtt_properties = properties.get("mqtt")
+    mqtt_host = mqtt_properties.get("host-address").text
+    mqtt_port = mqtt_properties.get("host-port").text
+    mqtt_user = mqtt_properties.get("username").text
+    mqtt_pass = mqtt_properties.get("password").text
+    mqtt_root_topic = mqtt_properties.get("root-topic").text
+    mqtt_client_id = mqtt_properties.get("client-id").text + "-" + str(uuid.uuid4())
+    mqtt_config = MqttConfig(mqtt_host, mqtt_port, mqtt_user, mqtt_pass, mqtt_root_topic, mqtt_client_id)
+
+    serial_port = SerialPort(properties.get("port").text)
     telegram_to_mqtt = TelegramToMqtt(serial_port, mqtt_config)
 
-    interval_time = commandline_arguments.interval
+    interval_time = properties.get("interval").text
     logging.debug(f"Reading and publishing with an interval of {interval_time} seconds")
     asyncio.run(run_with_interval(interval_time, telegram_to_mqtt.handle_new_telegram))
