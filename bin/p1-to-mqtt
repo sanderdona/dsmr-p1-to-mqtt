@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     mqtt_properties = properties.get("mqtt")
     mqtt_host = mqtt_properties.get("host-address").text
-    mqtt_port = mqtt_properties.get("host-port").text
+    mqtt_port = mqtt_properties.get("host-port").data
     mqtt_user = mqtt_properties.get("username").text
     mqtt_pass = mqtt_properties.get("password").text
     mqtt_root_topic = mqtt_properties.get("root-topic").text
@@ -94,6 +94,6 @@ if __name__ == "__main__":
     serial_port = SerialPort(properties.get("port").text)
     telegram_to_mqtt = TelegramToMqtt(serial_port, mqtt_config)
 
-    interval_time = properties.get("interval").text
+    interval_time = properties.get("interval").data
     logging.debug(f"Reading and publishing with an interval of {interval_time} seconds")
     asyncio.run(run_with_interval(interval_time, telegram_to_mqtt.handle_new_telegram))
