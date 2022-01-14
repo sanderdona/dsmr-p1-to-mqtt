@@ -32,7 +32,7 @@ LOGGING_CONFIG = {
             'level': 'INFO',
             'formatter': 'standard',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '../log/p1-to-mqtt.log',
+            'filename': f'{root_path}/log/p1-to-mqtt.log',
             'maxBytes': 2048,
             'backupCount': 3,
         },
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     config_file = "config.yaml"
 
     try:
-        properties = load(open("../" + config_file).read(), schema)
+        properties = load(open(root_path + "/" + config_file).read(), schema)
     except FileNotFoundError as e:
         logging.error(f"Config file '{config_file}' not found")
         sys.exit(1)
