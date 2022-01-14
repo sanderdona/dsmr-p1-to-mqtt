@@ -56,6 +56,9 @@ async def run_with_interval(interval, function):
 
 if __name__ == "__main__":
 
+    if not os.path.exists(root_path + "/log"):
+        os.makedirs(root_path + "/log")
+
     logging.config.dictConfig(LOGGING_CONFIG)
     logging.info("Starting DSMR P1 to MQTT")
 
