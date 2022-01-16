@@ -10,7 +10,8 @@ setup(
     install_requires=[
         'paho-mqtt>=1.6.1',
         'pyserial>=3.5',
-        'pytz>=2021.3'
+        'pytz>=2021.3',
+        'strictyaml>=1.6.1'
     ],
     python_requires='>=3'
 )
