@@ -22,16 +22,13 @@ class MqttService:
     def on_connect(self, client, userdata, flags, rc):
         if rc == 0:
             logging.info("Connected to MQTT broker")
-            logging.debug("Starting loop...")
             self.client.loop_start()
-            logging.debug("Loop started")
         else:
             logging.warning("Failed to connect to MQTT broker. Return code: " + rc)
 
     def on_disconnect(self):
-        logging.debug("Disconnected. Stopping loop...")
+        logging.warning("Disconnected from broker")
         self.client.loop_stop()
-        logging.debug("Loop stopped")
 
     def on_log(self, client, userdata, level, buf):
         logging.debug("MQTT log: " + buf)
