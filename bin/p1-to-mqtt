@@ -33,7 +33,7 @@ LOGGING_CONFIG = {
             'formatter': 'standard',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': f'{root_path}/log/p1-to-mqtt.log',
-            'maxBytes': 2048,
+            'maxBytes': 50 * 1024 * 1024,
             'backupCount': 3,
         },
     },

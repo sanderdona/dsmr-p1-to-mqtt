@@ -3,7 +3,8 @@ import re
 from datetime import datetime
 import pytz
 
-import paho.mqtt.publish as publish
+from reader.domain import MqttMessage
+from reader.service import MqttService
 
 interesting_codes = {
     '0-0:1.0.0': {'topic': 'timestamp', 'type': 'timestamp'},
@@ -33,6 +34,7 @@ class TelegramToMqtt:
         logging.info(f"Publishing MQTT messages to host {self.mqtt_config.host} "
                      f"on port {self.mqtt_config.port} "
                      f"with client id {self.mqtt_config.client_id}")
+        self.mqtt_service = MqttService(self.mqtt_config)
 
     async def handle_new_telegram(self):
         telegram = self.serial_port.get_telegram()
@@ -41,60 +43,48 @@ class TelegramToMqtt:
         messages = self.convert_to_messages(telegram)
         logging.debug(f"Publishing messages to MQTT")
 
-        auth = {
-            'username': self.mqtt_config.username,
-            'password': self.mqtt_config.password
-        }
-
-        publish.multiple(
-            messages,
-            hostname=self.mqtt_config.host,
-            port=self.mqtt_config.port,
-            client_id=self.mqtt_config.client_id,
-            auth=auth
-        )
-
+        for message in messages:
+            await self.mqtt_service.publish(message)
         logging.info(f"Published {len(messages)} messages successfully")
 
     def convert_to_messages(self, telegram):
         messages = []
         for telegram_row in telegram:
-            if self.is_interesting_row(telegram_row):
+            if TelegramToMqtt.is_interesting_row(telegram_row):
                 messages.append(self.convert_to_message(telegram_row))
         return messages
-
-    def is_interesting_row(self, telegram_row):
-        for code in interesting_codes:
-            if re.match(rf'(?={code})', telegram_row):
-                return True
-        return False
 
     def convert_to_message(self, telegram_row):
         for code in interesting_codes:
             if re.match(rf'(?={code})', telegram_row):
                 topic = interesting_codes[code]['topic']
                 value_type = interesting_codes[code]['type']
-                value = self.clean_value(telegram_row, value_type)
-                msg = {
-                    'topic': f"{self.mqtt_config.base_topic}{topic}",
-                    'payload': value
-                }
-                return msg
+                value = TelegramToMqtt.clean_value(telegram_row, value_type)
+                return MqttMessage(value, f"{self.mqtt_config.base_topic}{topic}")
 
-    def clean_value(self, telegram_row, value_type):
+    @staticmethod
+    def clean_value(telegram_row, value_type):
         value = telegram_row[telegram_row.find('(') + 1: telegram_row.find(')')]
         if 'energy' == value_type:
             return float(value[:-4])
         elif 'current' == value_type:
             return float(value[:-3])
         elif 'timestamp' == value_type:
-            return self.timestamp_to_utc_datetime(value).strftime('%Y-%m-%dT%H:%M:%S.000Z')
+            return TelegramToMqtt.timestamp_to_utc_datetime(value).strftime('%Y-%m-%dT%H:%M:%S.000Z')
         elif 'boolean' == value_type:
             return value.lstrip('0')
         else:
             return value
 
-    def timestamp_to_utc_datetime(self, timestamp: str):
+    @staticmethod
+    def is_interesting_row(telegram_row):
+        for code in interesting_codes:
+            if re.match(rf'(?={code})', telegram_row):
+                return True
+        return False
+
+    @staticmethod
+    def timestamp_to_utc_datetime(timestamp: str):
         timezone = pytz.timezone('Europe/Amsterdam')
         naive_datetime = datetime.strptime(timestamp[:-1], '%y%m%d%H%M%S')
         dst_active = timestamp[-1:] == 'S'
