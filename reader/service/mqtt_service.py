@@ -35,4 +35,4 @@ class MqttService:
 
     async def publish(self, message: MqttMessage):
         logging.debug(f"Publishing payload {message.payload} to topic {message.topic}")
-        self.client.publish(message.topic, message.payload)
+        self.client.publish(message.topic, message.payload, retain=True)
