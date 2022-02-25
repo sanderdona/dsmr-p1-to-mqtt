@@ -1,9 +1,10 @@
 import logging
 import re
+import json
 from datetime import datetime
 import pytz
 
-from reader.domain import MqttMessage
+from reader.domain import MqttMessage, MessageDTO
 from reader.service import MqttService
 
 interesting_codes = {
@@ -26,6 +27,7 @@ interesting_codes = {
 
 class TelegramToMqtt:
     published_vars = {
+        'timestamp': '',
         'electricity_delivered_1': 0.0,
         'electricity_delivered_2': 0.0,
         'electricity_returned_1': 0.0,
@@ -66,18 +68,38 @@ class TelegramToMqtt:
         messages = []
         for telegram_row in telegram:
             if TelegramToMqtt.is_interesting_row(telegram_row):
-                message = self.convert_to_message(telegram_row)
-                if TelegramToMqtt.has_updated_value(message):
-                    messages.append(message)
+                message_dto = self.extract_data(telegram_row)
+                if TelegramToMqtt.has_updated_value(message_dto):
+                    messages.append(self.convert_to_message(message_dto, telegram_row))
         return messages
 
-    def convert_to_message(self, telegram_row):
+    def convert_to_message(self, message_dto: MessageDTO, telegram_row):
+        topic = message_dto.topic
+        value_type = message_dto.value_type
+        value = TelegramToMqtt.clean_value(telegram_row, value_type)
+        payload = TelegramToMqtt.create_payload(value, value_type)
+        return MqttMessage(json.dumps(payload), f"{self.mqtt_config.base_topic}{topic}")
+
+    @staticmethod
+    def extract_data(telegram_row):
         for code in interesting_codes:
             if re.match(rf'(?={code})', telegram_row):
                 topic = interesting_codes[code]['topic']
                 value_type = interesting_codes[code]['type']
                 value = TelegramToMqtt.clean_value(telegram_row, value_type)
-                return MqttMessage(value, f"{self.mqtt_config.base_topic}{topic}")
+                return MessageDTO(value, value_type, topic)
+
+    @staticmethod
+    def create_payload(value, value_type):
+        if value_type == 'timestamp':
+            return {
+                'value': value
+            }
+        else:
+            return {
+                'value': value,
+                'time': TelegramToMqtt.published_vars['timestamp']
+            }
 
     @staticmethod
     def clean_value(telegram_row, value_type):
@@ -101,11 +123,10 @@ class TelegramToMqtt:
         return False
 
     @staticmethod
-    def has_updated_value(message: MqttMessage):
-        topic = message.topic.rsplit('/', 1)[-1]
-        new_value = message.payload
+    def has_updated_value(message_dto: MessageDTO):
+        new_value = message_dto.value
         for published_var in TelegramToMqtt.published_vars:
-            if re.match(rf'(?={published_var})', topic):
+            if re.match(rf'(?={published_var})', message_dto.topic):
                 old_value = TelegramToMqtt.published_vars[published_var]
                 if old_value != new_value:
                     TelegramToMqtt.published_vars[published_var] = new_value
