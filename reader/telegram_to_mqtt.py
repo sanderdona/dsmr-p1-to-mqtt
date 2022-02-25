@@ -56,7 +56,7 @@ class TelegramToMqtt:
         logging.debug(f"Handling telegram containing {len(telegram)} rows")
 
         messages = self.convert_to_messages(telegram)
-        logging.debug(f"Publishing messages to MQTT")
+        logging.debug("Publishing messages to MQTT")
 
         for message in messages:
             await self.mqtt_service.publish(message)
