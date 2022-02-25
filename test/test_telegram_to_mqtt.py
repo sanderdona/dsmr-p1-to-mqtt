@@ -1,12 +1,11 @@
 import sys
-import unittest
-from unittest import mock
+from unittest import mock, IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
 from reader import TelegramToMqtt
 
 
-class TelegramToMqttTest(unittest.IsolatedAsyncioTestCase):
+class TelegramToMqttTest(IsolatedAsyncioTestCase):
 
     @mock.patch.object(sys.modules['reader.telegram_to_mqtt'], 'MqttService')
     async def test_handle_telegram(self, mocked_mqtt_service):
