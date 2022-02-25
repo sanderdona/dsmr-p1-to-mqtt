@@ -25,6 +25,21 @@ interesting_codes = {
 
 
 class TelegramToMqtt:
+    published_vars = {
+        'electricity_delivered_1': 0.0,
+        'electricity_delivered_2': 0.0,
+        'electricity_returned_1': 0.0,
+        'electricity_returned_2': 0.0,
+        'tariff_indicator': '',
+        'electricity_currently_delivered': 0.0,
+        'electricity_currently_returned': 0.0,
+        'phase_currently_delivered_l1': 0.0,
+        'phase_currently_delivered_l2': 0.0,
+        'phase_currently_delivered_l3': 0.0,
+        'phase_currently_returned_l1': 0.0,
+        'phase_currently_returned_l2': 0.0,
+        'phase_currently_returned_l3': 0.0,
+    }
 
     def __init__(self, serial_port, mqtt_config):
         self.serial_port = serial_port
@@ -51,7 +66,9 @@ class TelegramToMqtt:
         messages = []
         for telegram_row in telegram:
             if TelegramToMqtt.is_interesting_row(telegram_row):
-                messages.append(self.convert_to_message(telegram_row))
+                message = self.convert_to_message(telegram_row)
+                if TelegramToMqtt.has_updated_value(message):
+                    messages.append(message)
         return messages
 
     def convert_to_message(self, telegram_row):
@@ -82,6 +99,17 @@ class TelegramToMqtt:
             if re.match(rf'(?={code})', telegram_row):
                 return True
         return False
+
+    @staticmethod
+    def has_updated_value(message: MqttMessage):
+        topic = message.topic.rsplit('/', 1)[-1]
+        new_value = message.payload
+        for published_var in TelegramToMqtt.published_vars:
+            if re.match(rf'(?={published_var})', topic):
+                old_value = TelegramToMqtt.published_vars[published_var]
+                if old_value != new_value:
+                    TelegramToMqtt.published_vars[published_var] = new_value
+                    return True
 
     @staticmethod
     def timestamp_to_utc_datetime(timestamp: str):
