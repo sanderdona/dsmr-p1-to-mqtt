@@ -25,19 +25,11 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
 
         self.assertEqual(14, telegram_to_mqtt.mqtt_service.publish.call_count)
         self.assertEqual('2021-12-16T09:40:25.000Z', TelegramToMqtt.published_vars['timestamp'])
-        self.assertEqual(3382.928, TelegramToMqtt.published_vars['electricity_delivered_1'])
-        self.assertEqual(1576.309, TelegramToMqtt.published_vars['electricity_delivered_2'])
-        self.assertEqual(1944.285, TelegramToMqtt.published_vars['electricity_returned_1'])
-        self.assertEqual(4445.037, TelegramToMqtt.published_vars['electricity_returned_2'])
         self.assertEqual('2', TelegramToMqtt.published_vars['tariff_indicator'])
-        self.assertEqual(0.0, TelegramToMqtt.published_vars['electricity_currently_delivered'])
-        self.assertEqual(0.807, TelegramToMqtt.published_vars['electricity_currently_returned'])
-        self.assertEqual(0.0, TelegramToMqtt.published_vars['phase_currently_delivered_l1'])
-        self.assertEqual(0.0, TelegramToMqtt.published_vars['phase_currently_delivered_l2'])
-        self.assertEqual(0.0, TelegramToMqtt.published_vars['phase_currently_delivered_l3'])
-        self.assertEqual(0.152, TelegramToMqtt.published_vars['phase_currently_returned_l1'])
-        self.assertEqual(0.309, TelegramToMqtt.published_vars['phase_currently_returned_l2'])
-        self.assertEqual(0.345, TelegramToMqtt.published_vars['phase_currently_returned_l3'])
+        self.assertEqual(3382.928, TelegramToMqtt.published_vars['electricity_positions/delivered/t1'])
+        self.assertEqual(1576.309, TelegramToMqtt.published_vars['electricity_positions/delivered/t2'])
+        self.assertEqual(1944.285, TelegramToMqtt.published_vars['electricity_positions/returned/t1'])
+        self.assertEqual(4445.037, TelegramToMqtt.published_vars['electricity_positions/returned/t2'])
 
     @mock.patch.object(sys.modules['reader.telegram_to_mqtt'], 'MqttService')
     async def test_only_update_current(self, mocked_mqtt_service):
@@ -76,24 +68,16 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
         messages = telegram_to_mqtt.convert_to_messages(telegram_row)
 
         self.assertIsNotNone(messages)
-        self.assertEqual('dsmr/reading/electricity_delivered_1', messages[1].topic)
+        self.assertEqual('dsmr/reading/electricity_positions/delivered/t1', messages[1].topic)
         self.assertEqual('{"value": 3382.357, "time": "2021-12-16T09:40:26.000Z"}', messages[1].payload)
 
     @staticmethod
     def set_defaults():
         TelegramToMqtt.published_vars = {
             'timestamp': '',
-            'electricity_delivered_1': 0.0,
-            'electricity_delivered_2': 0.0,
-            'electricity_returned_1': 0.0,
-            'electricity_returned_2': 0.0,
             'tariff_indicator': '',
-            'electricity_currently_delivered': 0.0,
-            'electricity_currently_returned': 0.0,
-            'phase_currently_delivered_l1': 0.0,
-            'phase_currently_delivered_l2': 0.0,
-            'phase_currently_delivered_l3': 0.0,
-            'phase_currently_returned_l1': 0.0,
-            'phase_currently_returned_l2': 0.0,
-            'phase_currently_returned_l3': 0.0,
+            'electricity_positions/delivered/t1': 0.0,
+            'electricity_positions/delivered/t2': 0.0,
+            'electricity_positions/returned/t1': 0.0,
+            'electricity_positions/returned/t2': 0.0,
         }

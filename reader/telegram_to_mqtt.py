@@ -9,38 +9,30 @@ from reader.service import MqttService
 
 interesting_codes = {
     '0-0:1.0.0': {'topic': 'timestamp', 'type': 'timestamp'},
-    '1-0:1.8.1': {'topic': 'electricity_delivered_1', 'type': 'energy'},
-    '1-0:1.8.2': {'topic': 'electricity_delivered_2', 'type': 'energy'},
-    '1-0:2.8.1': {'topic': 'electricity_returned_1', 'type': 'energy'},
-    '1-0:2.8.2': {'topic': 'electricity_returned_2', 'type': 'energy'},
     '0-0:96.14.0': {'topic': 'tariff_indicator', 'type': 'boolean'},
-    '1-0:1.7.0': {'topic': 'electricity_currently_delivered', 'type': 'current'},
-    '1-0:2.7.0': {'topic': 'electricity_currently_returned', 'type': 'current'},
-    '1-0:21.7.0': {'topic': 'phase_currently_delivered_l1', 'type': 'current'},
-    '1-0:41.7.0': {'topic': 'phase_currently_delivered_l2', 'type': 'current'},
-    '1-0:61.7.0': {'topic': 'phase_currently_delivered_l3', 'type': 'current'},
-    '1-0:22.7.0': {'topic': 'phase_currently_returned_l1', 'type': 'current'},
-    '1-0:42.7.0': {'topic': 'phase_currently_returned_l2', 'type': 'current'},
-    '1-0:62.7.0': {'topic': 'phase_currently_returned_l3', 'type': 'current'},
+    '1-0:1.8.1': {'topic': 'electricity_positions/delivered/t1', 'type': 'energy'},
+    '1-0:1.8.2': {'topic': 'electricity_positions/delivered/t2', 'type': 'energy'},
+    '1-0:2.8.1': {'topic': 'electricity_positions/returned/t1', 'type': 'energy'},
+    '1-0:2.8.2': {'topic': 'electricity_positions/returned/t2', 'type': 'energy'},
+    '1-0:1.7.0': {'topic': 'electricity_live/delivered/combined', 'type': 'current'},
+    '1-0:2.7.0': {'topic': 'electricity_live/returned/combined', 'type': 'current'},
+    '1-0:21.7.0': {'topic': 'electricity_live/delivered/l1', 'type': 'current'},
+    '1-0:41.7.0': {'topic': 'electricity_live/delivered/l2', 'type': 'current'},
+    '1-0:61.7.0': {'topic': 'electricity_live/delivered/l3', 'type': 'current'},
+    '1-0:22.7.0': {'topic': 'electricity_live/returned/l1', 'type': 'current'},
+    '1-0:42.7.0': {'topic': 'electricity_live/returned/l2', 'type': 'current'},
+    '1-0:62.7.0': {'topic': 'electricity_live/returned/l3', 'type': 'current'},
 }
 
 
 class TelegramToMqtt:
     published_vars = {
         'timestamp': '',
-        'electricity_delivered_1': 0.0,
-        'electricity_delivered_2': 0.0,
-        'electricity_returned_1': 0.0,
-        'electricity_returned_2': 0.0,
         'tariff_indicator': '',
-        'electricity_currently_delivered': 0.0,
-        'electricity_currently_returned': 0.0,
-        'phase_currently_delivered_l1': 0.0,
-        'phase_currently_delivered_l2': 0.0,
-        'phase_currently_delivered_l3': 0.0,
-        'phase_currently_returned_l1': 0.0,
-        'phase_currently_returned_l2': 0.0,
-        'phase_currently_returned_l3': 0.0,
+        'electricity_positions/delivered/t1': 0.0,
+        'electricity_positions/delivered/t2': 0.0,
+        'electricity_positions/returned/t1': 0.0,
+        'electricity_positions/returned/t2': 0.0,
     }
 
     def __init__(self, serial_port, mqtt_config):
@@ -131,6 +123,7 @@ class TelegramToMqtt:
                 if old_value != new_value:
                     TelegramToMqtt.published_vars[published_var] = new_value
                     return True
+        return False
 
     @staticmethod
     def always_update(message_dto: MessageDTO):
