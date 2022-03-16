@@ -69,7 +69,7 @@ class TelegramToMqtt:
         for telegram_row in telegram:
             if TelegramToMqtt.is_interesting_row(telegram_row):
                 message_dto = self.extract_data(telegram_row)
-                if TelegramToMqtt.has_updated_value(message_dto):
+                if TelegramToMqtt.has_updated_value(message_dto) or TelegramToMqtt.always_update(message_dto):
                     messages.append(self.convert_to_message(message_dto, telegram_row))
         return messages
 
@@ -131,6 +131,10 @@ class TelegramToMqtt:
                 if old_value != new_value:
                     TelegramToMqtt.published_vars[published_var] = new_value
                     return True
+
+    @staticmethod
+    def always_update(message_dto: MessageDTO):
+        return 'current' == message_dto.value_type
 
     @staticmethod
     def timestamp_to_utc_datetime(timestamp: str):
