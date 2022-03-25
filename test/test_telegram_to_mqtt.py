@@ -1,4 +1,5 @@
 import sys
+import json
 from unittest import mock, IsolatedAsyncioTestCase
 from unittest.mock import Mock, AsyncMock
 
@@ -9,6 +10,10 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
 
     @mock.patch.object(sys.modules['reader.telegram_to_mqtt'], 'MqttService')
     async def test_handle_telegram(self, mocked_mqtt_service):
+        base_topic = 'dsmr/reading/'
+        positions = 'electricity_positions/'
+        live = 'electricity_live/'
+
         with open('telegram.out') as telegram_file:
             telegram = telegram_file.readlines()
 
@@ -16,7 +21,7 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
         serial_port.get_telegram.return_value = telegram
 
         config = Mock()
-        config.base_topic = 'dsmr/reading/'
+        config.base_topic = base_topic
 
         telegram_to_mqtt = TelegramToMqtt(serial_port, config)
         telegram_to_mqtt.mqtt_service.publish = AsyncMock()
@@ -24,12 +29,33 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
         await telegram_to_mqtt.handle_new_telegram()
 
         self.assertEqual(20, telegram_to_mqtt.mqtt_service.publish.call_count)
-        self.assertEqual('2021-12-16T09:40:25.000Z', TelegramToMqtt.published_vars['timestamp'])
-        self.assertEqual('2', TelegramToMqtt.published_vars['tariff_indicator'])
-        self.assertEqual(3382.928, TelegramToMqtt.published_vars['electricity_positions/delivered/t1'])
-        self.assertEqual(1576.309, TelegramToMqtt.published_vars['electricity_positions/delivered/t2'])
-        self.assertEqual(1944.285, TelegramToMqtt.published_vars['electricity_positions/returned/t1'])
-        self.assertEqual(4445.037, TelegramToMqtt.published_vars['electricity_positions/returned/t2'])
+
+        self.assertEqual('2021-12-16T09:40:25.000Z', self.get_value_by_topic(base_topic + 'timestamp', telegram_to_mqtt))
+        self.assertEqual('2', self.get_value_by_topic(base_topic + 'tariff_indicator', telegram_to_mqtt))
+
+        self.assertEqual(3382.928, self.get_value_by_topic(base_topic + positions + 'delivered/t1', telegram_to_mqtt))
+        self.assertEqual(1576.309, self.get_value_by_topic(base_topic + positions + 'delivered/t2', telegram_to_mqtt))
+        self.assertEqual(1944.285, self.get_value_by_topic(base_topic + positions + 'returned/t1', telegram_to_mqtt))
+        self.assertEqual(4445.037, self.get_value_by_topic(base_topic + positions + 'returned/t2', telegram_to_mqtt))
+
+        self.assertEqual(0.0, self.get_value_by_topic(base_topic + live + 'delivered/combined', telegram_to_mqtt))
+        self.assertEqual(0.807, self.get_value_by_topic(base_topic + live + 'returned/combined', telegram_to_mqtt))
+
+        self.assertEqual(0.0, self.get_value_by_topic(base_topic + live + 'delivered/l1', telegram_to_mqtt))
+        self.assertEqual(0.0, self.get_value_by_topic(base_topic + live + 'delivered/l2', telegram_to_mqtt))
+        self.assertEqual(0.0, self.get_value_by_topic(base_topic + live + 'delivered/l3', telegram_to_mqtt))
+
+        self.assertEqual(0.152, self.get_value_by_topic(base_topic + live + 'returned/l1', telegram_to_mqtt))
+        self.assertEqual(0.309, self.get_value_by_topic(base_topic + live + 'returned/l2', telegram_to_mqtt))
+        self.assertEqual(0.345, self.get_value_by_topic(base_topic + live + 'returned/l3', telegram_to_mqtt))
+
+        self.assertEqual(236.0, self.get_value_by_topic(base_topic + live + 'voltage/l1', telegram_to_mqtt))
+        self.assertEqual(236.0, self.get_value_by_topic(base_topic + live + 'voltage/l2', telegram_to_mqtt))
+        self.assertEqual(236.0, self.get_value_by_topic(base_topic + live + 'voltage/l3', telegram_to_mqtt))
+
+        self.assertEqual(1, self.get_value_by_topic(base_topic + live + 'current/l1', telegram_to_mqtt))
+        self.assertEqual(1, self.get_value_by_topic(base_topic + live + 'current/l2', telegram_to_mqtt))
+        self.assertEqual(1, self.get_value_by_topic(base_topic + live + 'current/l3', telegram_to_mqtt))
 
     @mock.patch.object(sys.modules['reader.telegram_to_mqtt'], 'MqttService')
     async def test_only_update_current(self, mocked_mqtt_service):
@@ -81,3 +107,12 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
             'electricity_positions/returned/t1': 0.0,
             'electricity_positions/returned/t2': 0.0,
         }
+
+    @staticmethod
+    def get_value_by_topic(topic, telegram_to_mqtt: TelegramToMqtt):
+        call_args_list = telegram_to_mqtt.mqtt_service.publish.call_args_list
+        for call_arg in call_args_list:
+            args, kwargs = call_arg
+            for arg in args:
+                if topic == arg.topic:
+                    return json.loads(arg.payload)['value']

@@ -114,6 +114,8 @@ class TelegramToMqtt:
             return float(value[:-3])
         elif 'voltage' == value_type:
             return float(value[:-2])
+        elif 'current' == value_type:
+            return float(value[:-2])
         elif 'timestamp' == value_type:
             return TelegramToMqtt.timestamp_to_utc_datetime(value).strftime('%Y-%m-%dT%H:%M:%S.000Z')
         elif 'boolean' == value_type:
