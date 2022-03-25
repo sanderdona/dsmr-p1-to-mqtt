@@ -23,7 +23,7 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
 
         await telegram_to_mqtt.handle_new_telegram()
 
-        self.assertEqual(14, telegram_to_mqtt.mqtt_service.publish.call_count)
+        self.assertEqual(17, telegram_to_mqtt.mqtt_service.publish.call_count)
         self.assertEqual('2021-12-16T09:40:25.000Z', TelegramToMqtt.published_vars['timestamp'])
         self.assertEqual('2', TelegramToMqtt.published_vars['tariff_indicator'])
         self.assertEqual(3382.928, TelegramToMqtt.published_vars['electricity_positions/delivered/t1'])
@@ -50,7 +50,7 @@ class TelegramToMqttTest(IsolatedAsyncioTestCase):
         await telegram_to_mqtt.handle_new_telegram()
         await telegram_to_mqtt.handle_new_telegram()
 
-        self.assertEqual(22, telegram_to_mqtt.mqtt_service.publish.call_count)
+        self.assertEqual(28, telegram_to_mqtt.mqtt_service.publish.call_count)
 
     @mock.patch.object(sys.modules['reader.telegram_to_mqtt'], 'MqttService')
     async def test_convert_to_message(self, mocked_mqtt_service):

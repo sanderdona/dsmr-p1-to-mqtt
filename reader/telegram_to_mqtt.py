@@ -14,15 +14,23 @@ interesting_codes = {
     '1-0:1.8.2': {'topic': 'electricity_positions/delivered/t2', 'type': 'energy'},
     '1-0:2.8.1': {'topic': 'electricity_positions/returned/t1', 'type': 'energy'},
     '1-0:2.8.2': {'topic': 'electricity_positions/returned/t2', 'type': 'energy'},
-    '1-0:1.7.0': {'topic': 'electricity_live/delivered/combined', 'type': 'current'},
-    '1-0:2.7.0': {'topic': 'electricity_live/returned/combined', 'type': 'current'},
-    '1-0:21.7.0': {'topic': 'electricity_live/delivered/l1', 'type': 'current'},
-    '1-0:41.7.0': {'topic': 'electricity_live/delivered/l2', 'type': 'current'},
-    '1-0:61.7.0': {'topic': 'electricity_live/delivered/l3', 'type': 'current'},
-    '1-0:22.7.0': {'topic': 'electricity_live/returned/l1', 'type': 'current'},
-    '1-0:42.7.0': {'topic': 'electricity_live/returned/l2', 'type': 'current'},
-    '1-0:62.7.0': {'topic': 'electricity_live/returned/l3', 'type': 'current'},
+    '1-0:1.7.0': {'topic': 'electricity_live/delivered/combined', 'type': 'power'},
+    '1-0:2.7.0': {'topic': 'electricity_live/returned/combined', 'type': 'power'},
+    '1-0:21.7.0': {'topic': 'electricity_live/delivered/l1', 'type': 'power'},
+    '1-0:41.7.0': {'topic': 'electricity_live/delivered/l2', 'type': 'power'},
+    '1-0:61.7.0': {'topic': 'electricity_live/delivered/l3', 'type': 'power'},
+    '1-0:22.7.0': {'topic': 'electricity_live/returned/l1', 'type': 'power'},
+    '1-0:42.7.0': {'topic': 'electricity_live/returned/l2', 'type': 'power'},
+    '1-0:62.7.0': {'topic': 'electricity_live/returned/l3', 'type': 'power'},
+    '1-0:32.7.0': {'topic': 'electricity_live/voltage/l1', 'type': 'voltage'},
+    '1-0:52.7.0': {'topic': 'electricity_live/voltage/l2', 'type': 'voltage'},
+    '1-0:72.7.0': {'topic': 'electricity_live/voltage/l3', 'type': 'voltage'},
 }
+
+always_update_types = [
+    'power',
+    'voltage',
+]
 
 
 class TelegramToMqtt:
@@ -98,8 +106,10 @@ class TelegramToMqtt:
         value = telegram_row[telegram_row.find('(') + 1: telegram_row.find(')')]
         if 'energy' == value_type:
             return float(value[:-4])
-        elif 'current' == value_type:
+        elif 'power' == value_type:
             return float(value[:-3])
+        elif 'voltage' == value_type:
+            return float(value[:-2])
         elif 'timestamp' == value_type:
             return TelegramToMqtt.timestamp_to_utc_datetime(value).strftime('%Y-%m-%dT%H:%M:%S.000Z')
         elif 'boolean' == value_type:
@@ -127,7 +137,7 @@ class TelegramToMqtt:
 
     @staticmethod
     def always_update(message_dto: MessageDTO):
-        return 'current' == message_dto.value_type
+        return message_dto.value_type in always_update_types
 
     @staticmethod
     def timestamp_to_utc_datetime(timestamp: str):
