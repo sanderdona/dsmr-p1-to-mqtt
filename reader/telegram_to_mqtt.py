@@ -25,11 +25,15 @@ interesting_codes = {
     '1-0:32.7.0': {'topic': 'electricity_live/voltage/l1', 'type': 'voltage'},
     '1-0:52.7.0': {'topic': 'electricity_live/voltage/l2', 'type': 'voltage'},
     '1-0:72.7.0': {'topic': 'electricity_live/voltage/l3', 'type': 'voltage'},
+    '1-0:31.7.0': {'topic': 'electricity_live/current/l1', 'type': 'current'},
+    '1-0:51.7.0': {'topic': 'electricity_live/current/l2', 'type': 'current'},
+    '1-0:71.7.0': {'topic': 'electricity_live/current/l3', 'type': 'current'},
 }
 
 always_update_types = [
     'power',
     'voltage',
+    'current',
 ]
 
 
