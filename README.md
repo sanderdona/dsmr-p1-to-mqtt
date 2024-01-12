@@ -13,7 +13,7 @@ cd ~
 
 Use the following command to install this service on your Linux machine.
 ```bash
-bash <(curl -s https://raw.githubusercontent.com/sanderdona/dsmr-p1-to-mqtt/main/install.sh)
+bash <(curl -s -H 'Pragma: no-cache' https://raw.githubusercontent.com/sanderdona/dsmr-p1-to-mqtt/feature-install-script/install.sh)
 ```
 
 Check if the service is installed correctly.
