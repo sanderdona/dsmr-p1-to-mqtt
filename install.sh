@@ -9,7 +9,12 @@ unzip "${REPO_NAME}/${REPO_NAME}.zip" -d "${REPO_NAME}"
 rm "${REPO_NAME}/${REPO_NAME}.zip"
 echo "Done"
 
-cd "${REPO_NAME}" || echo "Failed to create directory." ; exit
+if [ -d "${REPO_NAME}" ]; then
+    cd "${REPO_NAME}" || return
+else
+  echo "Failed to create directory."
+  exit
+fi
 
 echo "Installing python3-venv..."
 sudo apt-get install python3-venv
