@@ -9,6 +9,7 @@ unzip "${REPO_NAME}/${REPO_NAME}.zip" -d "${REPO_NAME}"
 rm "${REPO_NAME}/${REPO_NAME}.zip"
 echo "Done"
 
+echo "${REPO_NAME}"
 if [ -d "${REPO_NAME}" ]; then
     cd "${REPO_NAME}"
 else
