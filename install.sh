@@ -16,9 +16,11 @@ sudo apt-get install python3-venv
 echo "Done"
 
 # Make the p1-to-mqtt file executable.
-echo "Make service executable..."
+echo "Going into newly created dir $REPO_NAME"
 # shellcheck disable=SC2164
 cd "${REPO_NAME}"
+
+echo "Make service executable..."
 chmod +x bin/p1-to-mqtt
 echo "Done"
 
