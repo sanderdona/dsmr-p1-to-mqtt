@@ -1,21 +1,20 @@
 #!/bin/bash
 
 REPO_NAME="dsmr-p1-to-mqtt"
+BRANCH_NAME="main"
 
 echo "Download and extract files..."
-mkdir "${REPO_NAME}"
-curl -L "https://github.com/sanderdona/${REPO_NAME}/archive/refs/heads/main.zip" -o "${REPO_NAME}/${REPO_NAME}.zip"
-unzip "${REPO_NAME}/${REPO_NAME}.zip" -d "${REPO_NAME}"
-rm "${REPO_NAME}/${REPO_NAME}.zip"
-echo "Done"
-
-echo "${REPO_NAME}"
-if [ -d "${REPO_NAME}" ]; then
-    cd "${REPO_NAME}"
+curl -L "https://github.com/sanderdona/$REPO_NAME/archive/refs/heads/$BRANCH_NAME.zip" -o "$REPO_NAME.zip"
+unzip "$REPO_NAME.zip" -d "$REPO_NAME"
+echo "Delete zip file..."
+rm "$REPO_NAME.zip"
+if [ -d "$REPO_NAME" ]; then
+    cd "$REPO_NAME-$REPO_NAME" || return
 else
   echo "Failed to create directory."
   exit
 fi
+echo "Done"
 
 echo "Installing python3-venv..."
 sudo apt-get install python3-venv
