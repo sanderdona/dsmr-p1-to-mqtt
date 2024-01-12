@@ -10,16 +10,18 @@ unzip "${REPO_NAME}/${REPO_NAME}.zip" -d "${REPO_NAME}"
 rm "${REPO_NAME}/${REPO_NAME}.zip"
 echo "Done"
 
+#Installing python3-venv
+apt-get install python3-venv
+
 # Make the p1-to-mqtt file executable.
 echo "Make service executable..."
+# shellcheck disable=SC2164
+cd "${REPO_NAME}"
 chmod +x bin/p1-to-mqtt
 echo "Done"
 
 # Create a virtual environment and activate it.
 echo "Create a virtual environment..."
-
-# shellcheck disable=SC2164
-cd "${REPO_NAME}"
 python3 -m venv .venv
 source .venv/bin/activate
 echo "Done"
