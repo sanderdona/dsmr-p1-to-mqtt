@@ -5,8 +5,7 @@ BRANCH_NAME="main"
 
 echo "Download and extract files..."
 curl -L "https://github.com/sanderdona/$REPO_NAME/archive/refs/heads/$BRANCH_NAME.zip" -o "$REPO_NAME.zip"
-unzip "$REPO_NAME.zip" -d "$REPO_NAME"
-echo "Delete zip file..."
+unzip "$REPO_NAME.zip"
 rm "$REPO_NAME.zip"
 cd "$REPO_NAME-$BRANCH_NAME" || { echo "Something went wrong while downloading or extracting."; exit 1;}
 echo "Done"
