@@ -10,7 +10,7 @@ rm "${REPO_NAME}/${REPO_NAME}.zip"
 echo "Done"
 
 if [ -d "${REPO_NAME}" ]; then
-    cd "${REPO_NAME}" || return
+    cd "${REPO_NAME}"
 else
   echo "Failed to create directory."
   exit
