@@ -11,7 +11,7 @@ rm "${REPO_NAME}/${REPO_NAME}.zip"
 echo "Done"
 
 #Installing python3-venv
-apt-get install python3-venv
+sudo apt-get install python3-venv
 
 # Make the p1-to-mqtt file executable.
 echo "Make service executable..."
