@@ -44,6 +44,6 @@ done
 
 if [ -z "$device" ]; then
     echo "No device found."
-    read -pr "Device path: " device
+    read -pr "Device path: " "$device"
 fi
 
