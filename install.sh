@@ -30,31 +30,40 @@ echo "Done"
 echo "Getting USB devices..."
 devices=$(ls /dev/ttyUSB* 2>/dev/null)
 
+# Check if any devices are found
 if [ -z "$devices" ]; then
-  echo "No devices found."
+  echo "No devices found"
 else
-  echo "Found the following devices:"
-  i=1
-  for device in $devices; do
-    # Extract vendor and model info
-    vendor=$(udevadm info --query=property --name="$device" | grep '^ID_VENDOR_FROM_DATABASE=' | cut -d= -f2)
-    model=$(udevadm info --query=property --name="$device" | grep '^ID_MODEL_FROM_DATABASE=' | cut -d= -f2)
+  while true; do
+    echo "Available devices:"
+    i=1
+    for device in $devices; do
+      # Extract vendor and model info
+      vendor=$(udevadm info --query=property --name=$device | grep '^ID_VENDOR_FROM_DATABASE=' | cut -d= -f2)
+      model=$(udevadm info --query=property --name=$device | grep '^ID_MODEL_FROM_DATABASE=' | cut -d= -f2)
 
-    echo "$i) $device - $vendor $model"
-    i=$((i+1))
+      # Display device with vendor and model
+      echo "$i) $device | $vendor - $model"
+      i=$((i+1))
+    done
+
+    # Prompt the user to choose a device
+    read -p "Enter the number of the device you want to use (or 'q' to quit): " selection
+
+    # Check if the user wants to quit
+    if [ "$selection" == "q" ]; then
+      echo "Exiting the script."
+      break
+    fi
+
+    # Validate user input
+    if [[ "$selection" =~ ^[0-9]+$ && "$selection" -ge 1 && "$selection" -le ${#devices[@]} ]]; then
+      selected_device=${devices[$((selection-1))]}
+      # Display the selected device with vendor and model
+      echo "Selected: $selected_device"
+      break
+    else
+      echo "Invalid selection. Please choose a valid device or enter 'q' to quit."
+    fi
   done
-
-  # Prompt the user to choose a device
-  read -p "Enter the number of the device you want to use: " selection
-
-  # Validate user input
-  if [[ "$selection" =~ ^[0-9]+$ && "$selection" -ge 1 && "$selection" -le ${#devices[@]} ]]; then
-    selected_device=${devices[$((selection-1))]}
-    # Display the selected device with vendor and model
-    echo "Using device $selected_device"
-
-  else
-    echo "Invalid selection. Please choose a valid device."
-  fi
 fi
-
