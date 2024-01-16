@@ -27,19 +27,34 @@ echo "Install required packages in virtual environment..."
 pip install .
 echo "Done"
 
-echo "Getting USB device to communicate with P1 port..."
-for dir in /sys/class/tty/ttyUSB*
-do
-  echo "Device: $dir"
-#  cu -l dir
-#  if timeout 2s cat dir | grep -q "/" ; then
-#      device=${dir%*/}
-#      break
-#  fi
-done
+echo "Getting USB devices..."
+devices=$(ls /dev/ttyUSB* 2>/dev/null)
 
-if [ -z "$device" ]; then
-    echo "No device found."
-    read -pr "Device path: " "$device"
+if [ -z "$devices" ]; then
+  echo "No devices found."
+else
+  echo "Found the following devices:"
+  i=1
+  for device in $devices; do
+    # Extract vendor and model info
+    vendor=$(udevadm info --query=property --name="$device" | grep '^ID_VENDOR_FROM_DATABASE=' | cut -d= -f2)
+    model=$(udevadm info --query=property --name="$device" | grep '^ID_MODEL_FROM_DATABASE=' | cut -d= -f2)
+
+    echo "$i) $device - $vendor $model"
+    i=$((i+1))
+  done
+
+  # Prompt the user to choose a device
+  read -p "Enter the number of the device you want to use: " selection
+
+  # Validate user input
+  if [[ "$selection" =~ ^[0-9]+$ && "$selection" -ge 1 && "$selection" -le ${#devices[@]} ]]; then
+    selected_device=${devices[$((selection-1))]}
+    # Display the selected device with vendor and model
+    echo "Using device $selected_device"
+
+  else
+    echo "Invalid selection. Please choose a valid device."
+  fi
 fi
 
